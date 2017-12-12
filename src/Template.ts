@@ -36,21 +36,23 @@ function updateNodeValue(node: Node, value: any): Node {
   if (value instanceof TemplateThunk) {
     const prevThunk = (node as any).__thunk
 
-    let changed = false
+    let shouldUpdate = false
 
     if (prevThunk.args.length === value.args.length) {
       prevThunk.args.forEach((arg: any, idx: number) => {
         if (arg !== value.args[idx]) {
-          changed = true
+          shouldUpdate = true
         }
       })
+    } else {
+      shouldUpdate = true
+    }
 
-      if (changed) {
-        const newNode = updateNodeValue(node, value.fn(...value.args))
-        ;(newNode as any).__thunk = value
+    if (shouldUpdate) {
+      const newNode = updateNodeValue(node, value.fn(...value.args))
+      ;(newNode as any).__thunk = value
 
-        return newNode
-      }
+      return newNode
     }
 
     return node
