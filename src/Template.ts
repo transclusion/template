@@ -3,10 +3,18 @@ import {findNodeAtPath, regExpMatchAll} from './helpers'
 import {TemplateContext} from './TemplateContext'
 import {TemplateInstance} from './TemplateInstance'
 import {TemplateSlot} from './TemplateSlot'
+import {TemplateThunk} from './TemplateThunk'
 
-function insertNodeValue(refNode: Node, value: any) {
+function insertNodeValue(refNode: Node, value: any): Node {
   let childInstance
   let childNode
+
+  if (value instanceof TemplateThunk) {
+    const newNode = insertNodeValue(refNode, value.fn(...value.args))
+    ;(newNode as any).__thunk = value
+
+    return newNode
+  }
 
   if (value instanceof TemplateContext) {
     childInstance = new TemplateInstance(value)
@@ -20,9 +28,34 @@ function insertNodeValue(refNode: Node, value: any) {
   if (childInstance) {
     childInstance.setNode(refNode.nextSibling)
   }
+
+  return refNode.nextSibling
 }
 
-function updateNodeValue(node: Node, value: any) {
+function updateNodeValue(node: Node, value: any): Node {
+  if (value instanceof TemplateThunk) {
+    const prevThunk = (node as any).__thunk
+
+    let changed = false
+
+    if (prevThunk.args.length === value.args.length) {
+      prevThunk.args.forEach((arg: any, idx: number) => {
+        if (arg !== value.args[idx]) {
+          changed = true
+        }
+      })
+
+      if (changed) {
+        const newNode = updateNodeValue(node, value.fn(...value.args))
+        ;(newNode as any).__thunk = value
+
+        return newNode
+      }
+    }
+
+    return node
+  }
+
   if (value instanceof TemplateContext) {
     let childInstance = (node as any).__instance as TemplateInstance
 
@@ -33,13 +66,21 @@ function updateNodeValue(node: Node, value: any) {
 
       node.parentNode.insertBefore(childInstance.getFragment(), node)
 
-      childInstance.setNode(node.previousSibling)
+      const newNode = node.previousSibling
+
+      childInstance.setNode(newNode)
 
       node.parentNode.removeChild(node)
+
+      return newNode
     }
+  } else if (value instanceof TemplateThunk) {
+    //
   } else {
     node.nodeValue = String(value)
   }
+
+  return node
 }
 
 export class Template {
