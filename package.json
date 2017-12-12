@@ -1,0 +1,63 @@
+{
+  "name": "@transclusion/template",
+  "version": "1.0.0-alpha.1",
+  "description": "A tiny, focused and performant HTML template rendering library for Node.js and the browser.",
+  "author": "Marius Lundgård <studio@mariuslundgard.com>",
+  "license": "MIT",
+  "main": "dist/commonjs/index.js",
+  "module": "dist/module/index.js",
+  "typings": "dist/module/index.d.ts",
+  "scripts": {
+    "build": "npm-run-all tsc-* && npm-run-all rollup-*",
+    "clean": "rimraf dist",
+    "commit": "git-cz",
+    "coveralls": "cat ./coverage/lcov.info | coveralls",
+    "format": "prettier --no-bracket-spacing --no-semi --print-width 120 --single-quote --write \"{src,test}/**/*.{js,ts,tsx}\"",
+    "lint": "tslint -c tslint.json '{src,test}/**/*.{ts,tsx}'",
+    "prebuild": "npm run clean",
+    "precommit": "npm run build && npm run lint && npm run test",
+    "prepublishOnly": "npm run build",
+    "release": "semantic-release --access public",
+    "rollup-commonjs": "rollup --config .rollup/commonjs.config.js",
+    "rollup-module": "rollup --config .rollup/module.config.js",
+    "rollup-umd": "rollup --config .rollup/umd.config.js",
+    "test": "jest --coverage",
+    "test-watch": "jest --watch",
+    "tsc-commonjs": "tsc -p .tsconfig/commonjs.json",
+    "tsc-module": "tsc -p .tsconfig/module.json"
+  },
+  "devDependencies": {
+    "@transclusion/semantic-release": "^0.2.5",
+    "@types/jest": "^21.1.8",
+    "@types/node": "^8.0.28",
+    "commitizen": "^2.9.6",
+    "coveralls": "^3.0.0",
+    "cz-conventional-changelog": "^2.0.0",
+    "eslint": "^4.13.1",
+    "husky": "^0.14.3",
+    "jest": "^21.2.1",
+    "npm-run-all": "^4.1.2",
+    "prettier": "^1.9.2",
+    "rimraf": "^2.6.1",
+    "rollup": "^0.52.1",
+    "rollup-plugin-typescript2": "^0.8.4",
+    "rollup-plugin-uglify": "^2.0.1",
+    "ts-jest": "^21.2.4",
+    "tslint": "^5.8.0",
+    "tslint-config-prettier": "^1.6.0",
+    "typescript": "^2.6.2"
+  },
+  "jest": {
+    "mapCoverage": true,
+    "moduleFileExtensions": [
+      "js",
+      "ts",
+      "tsx"
+    ],
+    "testRegex": "(\\.|/)(test|spec)\\.tsx?$",
+    "transform": {
+      "^.+\\.tsx?$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "verbose": true
+  }
+}
