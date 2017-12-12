@@ -74,8 +74,6 @@ function updateNodeValue(node: Node, value: any): Node {
 
       return newNode
     }
-  } else if (value instanceof TemplateThunk) {
-    //
   } else {
     node.nodeValue = String(value)
   }
