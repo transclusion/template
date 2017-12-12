@@ -101,22 +101,25 @@ export class Template {
       const node = findNodeAtPath(rootNode, slot.path.slice(1))
 
       if (slot.type === 'attr') {
-        if (node instanceof HTMLElement) {
-          if (attrValues[slot.params.name] === undefined) {
-            if (!fragment) fragment = this.node.content.cloneNode(true) as DocumentFragment
+        const attrName = slot.params.name
 
-            attrValues[slot.params.name] = (findNodeAtPath(fragment, slot.path) as Element).getAttribute(
-              slot.params.name
-            )
+        if (!fragment) {
+          fragment = this.node.content.cloneNode(true) as DocumentFragment
+        }
+
+        if (node instanceof HTMLElement) {
+          if (attrValues[attrName] === undefined) {
+            attrValues[attrName] = (findNodeAtPath(fragment, slot.path) as Element).getAttribute(attrName)
           }
 
-          attrValues[slot.params.name] = attrValues[slot.params.name].replace(`<!--${PLACEHOLDER}-->`, String(value))
+          attrValues[attrName] = attrValues[attrName].replace(`<!--${PLACEHOLDER}-->`, String(value))
 
-          node.setAttribute(slot.params.name, attrValues[slot.params.name])
+          node.setAttribute(attrName, attrValues[attrName])
         }
       } else if (slot.type === 'node') {
         if (Array.isArray(value)) {
           let n = node
+
           value.forEach(val => {
             updateNodeValue(n, val)
             n = n.nextSibling
@@ -129,59 +132,40 @@ export class Template {
   }
 
   private walk(node: Node, path: number[] = []) {
-    switch (node.nodeType) {
+    let i
+
+    if (node.nodeType === 1) {
       // element node
-      case 1: {
-        let i
 
-        // find attribute slots
-        for (i = 0; i < node.attributes.length; i += 1) {
-          const attr = node.attributes[i]
-          const re = new RegExp(`<!--${PLACEHOLDER}-->`, 'g')
-          const matches = regExpMatchAll(re, attr.value)
+      // find attribute slots
+      for (i = 0; i < node.attributes.length; i += 1) {
+        const attr = node.attributes[i]
+        const re = new RegExp(`<!--${PLACEHOLDER}-->`, 'g')
+        const matches = regExpMatchAll(re, attr.value)
 
-          matches.forEach(() => {
-            this.slots.push(new TemplateSlot('attr', path, {name: attr.name}))
-          })
-        }
-
-        // find node slots
-        for (i = 0; i < node.childNodes.length; i += 1) {
-          this.walk(node.childNodes[i], path.concat([i]))
-        }
-
-        break
+        matches.forEach(() => {
+          this.slots.push(new TemplateSlot('attr', path, {name: attr.name}))
+        })
       }
 
-      // // text node
-      // case 3:
-      //   break
-
+      // continue walking the tree
+      for (i = 0; i < node.childNodes.length; i += 1) {
+        this.walk(node.childNodes[i], path.concat([i]))
+      }
+    } else if (node.nodeType === 8) {
       // comment node
-      case 8: {
-        if (node.nodeValue === PLACEHOLDER) {
-          this.slots.push(new TemplateSlot('node', path))
-        }
 
-        break
+      // find node slots
+      if (node.nodeValue === PLACEHOLDER) {
+        this.slots.push(new TemplateSlot('node', path))
       }
-
+    } else if (node.nodeType === 11) {
       // fragment node
-      case 11: {
-        let i
 
-        // find child slots
-        for (i = 0; i < node.childNodes.length; i += 1) {
-          this.walk(node.childNodes[i], path.concat([i]))
-        }
-
-        break
+      // continue walking the tree
+      for (i = 0; i < node.childNodes.length; i += 1) {
+        this.walk(node.childNodes[i], path.concat([i]))
       }
-
-      // // unhandled node
-      // default:
-      //   console.error('Unhandled node:', node.nodeName, node.nodeType)
-      //   break
     }
   }
 }
