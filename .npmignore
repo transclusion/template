@@ -1,7 +1,10 @@
 .DS_Store
 /.coveralls.yml
 /.editorconfig
+/.rollup
+/.rpt2_cache
 /.travis.yml
+/.tsconfig
 /coverage
 /node_modules
 /perf
