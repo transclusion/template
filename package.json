@@ -1,6 +1,6 @@
 {
   "name": "@transclusion/template",
-  "version": "1.0.0-alpha.2",
+  "version": "1.0.0-alpha.3",
   "description": "A tiny, focused and performant HTML template rendering library for Node.js and the browser.",
   "author": "Marius Lundgård <studio@mariuslundgard.com>",
   "license": "MIT",
