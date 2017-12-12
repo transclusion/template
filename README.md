@@ -12,8 +12,8 @@ npm install @transclusion/template --save
 
 ## Features
 
-* **Tiny.** 1.32 kB gzipped and minified
-* **Focused.** The API consists of two methods, `html` and `render`.
+* **Tiny.** 1.43 kB gzipped and minified
+* **Focused.** The API consists of three methods, `html`, `render` and `thunk`.
 * **Performant.** Uses native HTML templates which are reused to perform super fast.
 
 ## Why?
