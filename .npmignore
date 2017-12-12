@@ -6,6 +6,7 @@
 /.travis.yml
 /.tsconfig
 /coverage
+/demo.html
 /node_modules
 /perf
 /src
