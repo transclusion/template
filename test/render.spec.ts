@@ -85,4 +85,15 @@ describe('template/render', () => {
 
     expect(rootElm.innerHTML).toEqual('<div><span>4</span><span>5</span><span>6</span></div>')
   })
+
+  it('should render a node list', () => {
+    render(html`<div>foo</div><div>bar</div>`, rootElm)
+    expect(rootElm.innerHTML).toEqual('<div>foo</div><div>bar</div>')
+  })
+
+  // it('should update a node list', () => {
+  //   render(html`<div>foo</div><div>bar</div>`, rootElm)
+  //   render(html`<div>baz</div><div>qux</div>`, rootElm)
+  //   expect(rootElm.innerHTML).toEqual('<div>baz</div><div>qux</div>')
+  // })
 })

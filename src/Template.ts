@@ -32,29 +32,36 @@ function insertNodeValue(refNode: Node, value: any): Node {
   return refNode.nextSibling
 }
 
+function shouldThunkUpdate(prevThunk: TemplateThunk, nextThunk: TemplateThunk) {
+  let shouldUpdate = false
+
+  if (prevThunk.args.length === nextThunk.args.length) {
+    prevThunk.args.some((arg: any, idx: number) => {
+      if (arg !== nextThunk.args[idx]) {
+        shouldUpdate = true
+        return true
+      }
+    })
+  } else {
+    shouldUpdate = true
+  }
+
+  return shouldUpdate
+}
+
 function updateNodeValue(node: Node, value: any): Node {
   if (value instanceof TemplateThunk) {
     const prevThunk = (node as any).__thunk
 
-    let shouldUpdate = false
-
-    if (prevThunk.args.length === value.args.length) {
-      prevThunk.args.forEach((arg: any, idx: number) => {
-        if (arg !== value.args[idx]) {
-          shouldUpdate = true
-        }
-      })
-    } else {
-      shouldUpdate = true
-    }
-
-    if (shouldUpdate) {
+    if (shouldThunkUpdate(prevThunk, value)) {
       const newNode = updateNodeValue(node, value.fn(...value.args))
       ;(newNode as any).__thunk = value
 
+      // return new node
       return newNode
     }
 
+    // return current node
     return node
   }
 
@@ -108,24 +115,9 @@ export class Template {
       const node = findNodeAtPath(fragment, slot.path)
 
       if (slot.type === 'attr') {
-        if (node instanceof HTMLElement) {
-          const attrValue = node.getAttribute(slot.params.name)
-
-          node.setAttribute(slot.params.name, attrValue.replace(`<!--${PLACEHOLDER}-->`, String(value)))
-        }
+        this.insertAttr(node, value, slot)
       } else if (slot.type === 'node') {
-        if (Array.isArray(value)) {
-          let n = node
-
-          value.forEach(val => {
-            insertNodeValue(n, val)
-            n = n.nextSibling
-          })
-        } else {
-          insertNodeValue(node, value)
-        }
-
-        node.parentNode.removeChild(node)
+        this.insertNode(node, value)
       }
     })
 
@@ -133,43 +125,69 @@ export class Template {
   }
 
   public update(rootNode: Node, values: any[]) {
+    const fragment = this.node.content.cloneNode(true) as DocumentFragment
     const attrValues: any = {}
-
-    let fragment: DocumentFragment
 
     this.slots.forEach((slot, idx) => {
       const value = values[idx]
       const node = findNodeAtPath(rootNode, slot.path.slice(1))
 
       if (slot.type === 'attr') {
-        const attrName = slot.params.name
-
-        if (!fragment) {
-          fragment = this.node.content.cloneNode(true) as DocumentFragment
-        }
-
-        if (node instanceof HTMLElement) {
-          if (attrValues[attrName] === undefined) {
-            attrValues[attrName] = (findNodeAtPath(fragment, slot.path) as Element).getAttribute(attrName)
-          }
-
-          attrValues[attrName] = attrValues[attrName].replace(`<!--${PLACEHOLDER}-->`, String(value))
-
-          node.setAttribute(attrName, attrValues[attrName])
-        }
+        this.updateAttr(node, value, slot, fragment, attrValues)
       } else if (slot.type === 'node') {
-        if (Array.isArray(value)) {
-          let n = node
-
-          value.forEach(val => {
-            updateNodeValue(n, val)
-            n = n.nextSibling
-          })
-        } else {
-          updateNodeValue(node, value)
-        }
+        this.updateNode(node, value)
       }
     })
+  }
+
+  private insertAttr(node: Node, value: any, slot: TemplateSlot) {
+    if (node instanceof HTMLElement) {
+      const attrValue = node.getAttribute(slot.params.name)
+
+      node.setAttribute(slot.params.name, attrValue.replace(`<!--${PLACEHOLDER}-->`, String(value)))
+    }
+  }
+
+  private insertNode(node: Node, value: any) {
+    if (Array.isArray(value)) {
+      let n = node
+
+      value.forEach(val => {
+        insertNodeValue(n, val)
+        n = n.nextSibling
+      })
+    } else {
+      insertNodeValue(node, value)
+    }
+
+    node.parentNode.removeChild(node)
+  }
+
+  private updateAttr(node: Node, value: any, slot: TemplateSlot, fragment: DocumentFragment, attrValues: any) {
+    const attrName = slot.params.name
+
+    if (node instanceof HTMLElement) {
+      if (attrValues[attrName] === undefined) {
+        attrValues[attrName] = (findNodeAtPath(fragment, slot.path) as Element).getAttribute(attrName)
+      }
+
+      attrValues[attrName] = attrValues[attrName].replace(`<!--${PLACEHOLDER}-->`, String(value))
+
+      node.setAttribute(attrName, attrValues[attrName])
+    }
+  }
+
+  private updateNode(node: Node, value: any) {
+    if (Array.isArray(value)) {
+      let n = node
+
+      value.forEach(val => {
+        updateNodeValue(n, val)
+        n = n.nextSibling
+      })
+    } else {
+      updateNodeValue(node, value)
+    }
   }
 
   private walk(node: Node, path: number[] = []) {
