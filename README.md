@@ -1,5 +1,7 @@
 # @transclusion/template
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/transclusion/template.svg)](https://greenkeeper.io/)
+
 A tiny, focused and performant HTML template rendering library for Node.js and the browser.
 
 ```bash
